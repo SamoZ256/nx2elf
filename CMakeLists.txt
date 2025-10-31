@@ -14,3 +14,5 @@ add_library(nx2elf
     src/nx2elf.h
     src/types.h
 )
+
+target_include_directories(nx2elf PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

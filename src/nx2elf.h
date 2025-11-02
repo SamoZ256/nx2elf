@@ -14,20 +14,25 @@ struct NsoFile {
     kNro,
     kMod,
   };
+
   enum SegmentType { kText, kRodata, kData, kNumSegment };
+
   static const std::array<u8, 4> nso_magic;
   static const std::array<u8, 4> nro_magic;
   static const std::array<u8, 4> mod_magic;
+
   struct SegmentHeader {
     u32 file_offset;  // maybe &1==compressed?
     u32 mem_offset;
     u32 mem_size;
     u32 bss_align;
   };
+
   struct DataExtent {
     u32 offset;
     u32 size;
   };
+
   struct NsoHeader {
     u8 magic[4];
     u32 field_4;
@@ -42,6 +47,7 @@ struct NsoFile {
     DataExtent dynsym;
     sha256_digest segment_digests[kNumSegment];
   };
+
   // NRO stores the flat memory image - nothing needs to be decompressed or
   // relocated (although relocation fixups need to be applied). This also
   // implies that +4 in the file points to MOD header, so NRO header is at
@@ -59,10 +65,12 @@ struct NsoFile {
     DataExtent dynstr;
     DataExtent dynsym;
   };
+
   struct ModPointer {
     u32 field_0;
     u32 magic_offset;
   };
+
   struct ModHeader {
     // yaya, there are some fields here...for parsing, easier to ignore.
     // ModPointer mod_ptr;
@@ -76,6 +84,7 @@ struct NsoFile {
     // It seems the area around MOD0 is used for .note section
     // There is also a nss-name section
   };
+
   template <typename T>
   char* FormatBytes(char* p, T d) {
     for (auto& b : d)

@@ -13,12 +13,17 @@
 #include "elf_eh.h"
 #include "lz4.h"
 
+const std::array<u8, 4> NsoFile::nso_magic{{'N', 'S', 'O', '0'}};
+const std::array<u8, 4> NsoFile::nro_magic{{'N', 'R', 'O', '0'}};
+const std::array<u8, 4> NsoFile::mod_magic{{'M', 'O', 'D', '0'}};
+
 namespace File {
 
 struct FileDeleter {
   typedef std::FILE* pointer;
   void operator()(FILE* f) { std::fclose(f); }
 };
+
 typedef std::unique_ptr<std::FILE, FileDeleter> UniqueFile;
 
 static void iter_files(const std::filesystem::path& directory,
@@ -140,6 +145,7 @@ void NsoFile::Dump(bool verbose) {
 
   printf("%s", msg);
 }
+
 bool NsoFile::Decompress(u8* dst, u32 dst_len, const u8* src, u32 src_len) {
   int len = LZ4_decompress_safe(reinterpret_cast<const char*>(src),
                                 reinterpret_cast<char*>(dst), src_len, dst_len);
@@ -147,6 +153,7 @@ bool NsoFile::Decompress(u8* dst, u32 dst_len, const u8* src, u32 src_len) {
     printf("LZ4_decompress_safe: %d (expected %8x)\n", len, dst_len);
   return len > 0;
 }
+
 bool NsoFile::ResolvePlt(void* base, size_t len) {
   // Each plt slot is 4 instructions. The first entry fills 2 slots (resolving
   // thunk).
@@ -169,6 +176,7 @@ bool NsoFile::ResolvePlt(void* base, size_t len) {
   }
   return false;
 }
+
 bool NsoFile::Load(const std::vector<u8>& file) {
   const size_t nro_offset = ALIGN_UP(sizeof(ModPointer), 0x10);
   if (file.size() >= sizeof(NsoHeader) &&
@@ -421,6 +429,7 @@ bool NsoFile::Load(const std::vector<u8>& file) {
 
   return true;
 }
+
 void NsoFile::DumpElfInfo() {
   puts("dynamic:");
   struct {
@@ -475,12 +484,14 @@ void NsoFile::DumpElfInfo() {
            sym.st_size, name);
   });
 }
+
 void NsoFile::iter_dynsym(std::function<void(const Elf64_Sym&, u32)> func) {
   auto sym = reinterpret_cast<Elf64_Sym*>(&image[dyn_info.symtab]);
   for (u32 i = 0; i < header.dynsym.size / sizeof(Elf64_Sym); i++, sym++) {
     func(*sym, i);
   }
 }
+
 bool NsoFile::WriteElf(const std::filesystem::path& path) {
   StringTable shstrtab;
   shstrtab.AddString(".shstrtab");
